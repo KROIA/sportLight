@@ -1,7 +1,7 @@
 /*
 Autor Alex Krieg
-Datum 26.06.2018
-Version 0.2.0
+Datum 28.06.2018
+Version 0.2.1
 */
 
 #include <Adafruit_NeoPixel.h>
@@ -35,6 +35,13 @@ struct color
   byte green;
   byte blue;
 };
+enum RGB_mode
+{
+  RGB_none = 0,
+  RGB_loading = 1,
+  RGB_akku = 2,
+  RGB_normal = 3
+};
 enum modus
 {
   modus_none = 0,
@@ -43,6 +50,8 @@ enum modus
 };
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIXELPIN, NEO_GRB + NEO_KHZ800);
+RGB_mode rgb_mode = RGB_normal;
+
 MPU6050 accelgyro;
 IR_sensor ir_sensor(3,A0); 
 Timer sensor_UpdateIntervalTimer;
@@ -292,9 +301,84 @@ void triggerFunction()
 }
 void updateRGB()
 {
-  for(int i=0;i<NUMPIXELS;i++){
-    pixels.setPixelColor(i,pixels_enable*pixels_color.red,pixels_enable*pixels_color.green,pixels_enable*pixels_color.blue);
+  switch(rgb_mode)
+  {
+    case RGB_none:
+    {
+
+      break;
+    }
+    case RGB_loading:
+    {
+      if(loadingTimer.start(20))
+      {
+        for(int a=0; a<NUMPIXELS; a++)
+        {
+          if(a == loadingPos || a == loadingPos-1)
+           pixels.setPixelColor(a,0,50,0);
+          else
+           pixels.setPixelColor(a,0,0,0);
+      
+           
+        }
+        loadingPos++;
+        if(loadingPos >= NUMPIXELS)
+        {
+          loadingPos = 1;
+        }
+        pixels.show();
+      }
+      break;
+    }
+    case RGB_akku:
+    {
+      if(mode_akkuLowTimer.start(100))
+      {
+          for(int a=0; a<NUMPIXELS; a++)
+          {
+            pixels.setPixelColor(a,0,0,0);
+          }
+          byte pixelPos = map((int)((akkuVoltage-(minAkkuVoltage-1.0))*100),0,1100-(minAkkuVoltage-1.0)*100.0,1,NUMPIXELS);
+          for(int a=0; a<pixelPos; a++)
+          {
+            //map((long)(akkuVoltage*100)%NUMPIXELS,0,1223/NUMPIXELS,0,30)
+            if(mode_akkuLow_numLedOn > 25)
+              mode_akkuLow_numLedOn = 0;
+            if(a>mode_akkuLow_numLedOn)
+              continue;
+             int brightness = 100;
+             if(a == pixelPos-1)
+             {
+             // Serial.print("brightness: ");
+              // brightness = /*(1100-(akkuVoltage-(minAkkuVoltage-1.0))*100)*/(1100-(minAkkuVoltage-1.0)*100)  / NUMPIXELS;
+             //  Serial.println(brightness);
+             //  brightness = map(akkuVoltage*100-brightness*pixelPos,0,brightness*NUMPIXELS,0,100);
+              // brightness = map((1100-(akkuVoltage-(minAkkuVoltage-1.0))*100),0,brightness
+               brightness = (int)(1100-(minAkkuVoltage-1.0)*100)  / NUMPIXELS;
+              // Serial.print(brightness);
+               brightness = map((int)((akkuVoltage-(minAkkuVoltage-1.0))*100)% NUMPIXELS,0,brightness,0,100);
+             //  Serial.print(" ");
+             //  Serial.println(brightness);
+             }
+             pixels.setPixelColor(a,brightness*map(a,0,NUMPIXELS,30,0)/100,brightness*map(a,0,NUMPIXELS,0,30)/100,0);
+          }
+          pixels.show();
+          //if(mode_akkuLow_numLedOn < NUMPIXELS)
+          {
+            mode_akkuLow_numLedOn++;
+          }
+      }
+      break;
+    }
+    case RGB_normal:
+    {
+      for(int i=0;i<NUMPIXELS;i++){
+        pixels.setPixelColor(i,pixels_enable*pixels_color.red,pixels_enable*pixels_color.green,pixels_enable*pixels_color.blue);
+      }
+      break;
+    }
   }
+  
   pixels.show();
 }
 void IR_highTriggerFunction()
@@ -334,6 +418,7 @@ void handleMode()
       pixels_enable = true;
       mode_reflex_Timer.start();
       mode_reflex_time = 0;
+      rgb_mode = RGB_normal;
       //updateRGB();
       
       break;
@@ -362,7 +447,8 @@ void handleMode()
         mode_akkuLow_dumUp = true;
       }*/
 
-      LED_akku();
+      //LED_akku();
+      rgb_mode = RGB_akku;
       break;
     }
   }
@@ -409,6 +495,7 @@ void calibration()
   //Serial.print("map_firstError: ");
   //Serial.println(map_firstError);
   bool ret = false;
+  rgb_mode = RGB_loading;
   while(!ret)
   {
       int counter = 0;
@@ -423,7 +510,8 @@ void calibration()
         az+=tmpAZ;
         counter++;
         delay(5);
-        LED_loading();
+        updateRGB();
+        //LED_loading();
       }
       ax /= 10;
       ay /= 10;
@@ -470,6 +558,7 @@ void calibration()
       accelgyro.setYAccelOffset(offsetY);
       accelgyro.setZAccelOffset(offsetZ);
   }
+  rgb_mode = RGB_none;
   for(int b=0; b<50; b++)
   {
      for(int a=0; a<NUMPIXELS; a++)
@@ -500,66 +589,7 @@ void getAcceleration(MPU6050 &accel,float &ax,float &ay, float &az)
   ay = (float)_ay/(1024 * 0.8162);
   az = (float)_az/(1024 * 0.8162);
 }
-void LED_loading()
-{
-  if(loadingTimer.start(20))
-  {
-    for(int a=0; a<NUMPIXELS; a++)
-    {
-      if(a == loadingPos || a == loadingPos-1)
-       pixels.setPixelColor(a,0,50,0);
-      else
-       pixels.setPixelColor(a,0,0,0);
-  
-       
-    }
-    loadingPos++;
-    if(loadingPos >= NUMPIXELS)
-    {
-      loadingPos = 1;
-    }
-    pixels.show();
-  }
-}
-void LED_akku()
-{
-    if(mode_akkuLowTimer.start(100))
-    {
-        for(int a=0; a<NUMPIXELS; a++)
-        {
-          pixels.setPixelColor(a,0,0,0);
-        }
-        byte pixelPos = map((int)((akkuVoltage-(minAkkuVoltage-1.0))*100),0,1100-(minAkkuVoltage-1.0)*100.0,1,NUMPIXELS);
-        for(int a=0; a<pixelPos; a++)
-        {
-          //map((long)(akkuVoltage*100)%NUMPIXELS,0,1223/NUMPIXELS,0,30)
-          if(mode_akkuLow_numLedOn > 25)
-            mode_akkuLow_numLedOn = 0;
-          if(a>mode_akkuLow_numLedOn)
-            continue;
-           int brightness = 100;
-           if(a == pixelPos-1)
-           {
-           // Serial.print("brightness: ");
-            // brightness = /*(1100-(akkuVoltage-(minAkkuVoltage-1.0))*100)*/(1100-(minAkkuVoltage-1.0)*100)  / NUMPIXELS;
-           //  Serial.println(brightness);
-           //  brightness = map(akkuVoltage*100-brightness*pixelPos,0,brightness*NUMPIXELS,0,100);
-            // brightness = map((1100-(akkuVoltage-(minAkkuVoltage-1.0))*100),0,brightness
-             brightness = (int)(1100-(minAkkuVoltage-1.0)*100)  / NUMPIXELS;
-            // Serial.print(brightness);
-             brightness = map((int)((akkuVoltage-(minAkkuVoltage-1.0))*100)% NUMPIXELS,0,brightness,0,100);
-           //  Serial.print(" ");
-           //  Serial.println(brightness);
-           }
-           pixels.setPixelColor(a,brightness*map(a,0,NUMPIXELS,30,0)/100,brightness*map(a,0,NUMPIXELS,0,30)/100,0);
-        }
-        pixels.show();
-        //if(mode_akkuLow_numLedOn < NUMPIXELS)
-        {
-          mode_akkuLow_numLedOn++;
-        }
-    }
-}
+
 void checkAkku()
 {
   //V factor 0.6911764
@@ -575,8 +605,8 @@ void checkAkku()
     pixels_color.red = 0;
     pixels_color.green = 0;
     pixels_color.blue = 0;
-    pixelsUpdateTimer.autoRestart(false);
-    pixelsUpdateTimer.stop();
+   // pixelsUpdateTimer.autoRestart(false);
+   // pixelsUpdateTimer.stop();
   }
   else
   {
