@@ -1,0 +1,14 @@
+writing to server:
+{
+	color|100|100|100|
+	voltage|1.0
+
+}
+
+reading from server:
+{
+	data|+
+		voltage|5
+}
+
+endByte: `]`

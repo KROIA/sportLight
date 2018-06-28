@@ -1,7 +1,7 @@
 /*
 Autor Alex Krieg
 Datum 28.06.2018
-Version 0.2.1
+Version 0.2.2
 */
 
 #include <Adafruit_NeoPixel.h>
@@ -16,6 +16,7 @@ Version 0.2.1
 #include "button.h"
 #include "Timer.h"
 #include "IR_sensor.h"
+
 
 #define NUMPIXELS 16
 #define PIXELPIN 2
@@ -46,16 +47,16 @@ enum modus
 {
   modus_none = 0,
   modus_reflex = 1,
-  modus_akkuLow = 2
+  modus_akku = 2
 };
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIXELPIN, NEO_GRB + NEO_KHZ800);
 RGB_mode rgb_mode = RGB_normal;
+RGB_mode last_rgb_mode = RGB_normal;
 
 MPU6050 accelgyro;
 IR_sensor ir_sensor(3,A0); 
 Timer sensor_UpdateIntervalTimer;
-Timer irSensorCooldownTimer;
 Timer pixelsUpdateTimer;
 Timer wifiServerUpdateTimer;
 
@@ -66,6 +67,7 @@ unsigned int mode_reflex_time = 0;
 //---------
 bool mode_akkuLow_dimUp = true;
 Timer mode_akkuLowTimer;
+Timer displayAkkuTimer;
 byte mode_akkuLow_colorRed = 0;
 byte mode_akkuLow_numLedOn = 1;
 //------------------------------
@@ -90,13 +92,15 @@ float tmpAZ = 0;
 Timer loadingTimer;
 
 void readSerial();
+void writeSerial(String data);
 void wifiUpdate();
 void sensorUpdateFunction();
 void triggerFunction();
 void updateRGB();
 void IR_highTriggerFunction();
-void irSensorCooldownTimerFinishedFunction();
 void handleMode();
+
+void displayAkkuTimerFunction();
 
 void MODE(modus m);
 modus MODE();
@@ -123,7 +127,6 @@ void setup()
   sensor_UpdateIntervalTimer.onFinished(sensorUpdateFunction);
   sensor_UpdateIntervalTimer.autoRestart(true);
   sensor_UpdateIntervalTimer.start(20);
-  irSensorCooldownTimer.onFinished(irSensorCooldownTimerFinishedFunction);
   pixelsUpdateTimer.onFinished(updateRGB);
   pixelsUpdateTimer.autoRestart(true);
   pixelsUpdateTimer.start(100);
@@ -134,6 +137,8 @@ void setup()
   checkAkkuTimer.onFinished(checkAkku);
   checkAkkuTimer.autoRestart(true);
   checkAkkuTimer.start(50);
+
+  displayAkkuTimer.onFinished(displayAkkuTimerFunction);
   
   ir_sensor.onHighTrigger(IR_highTriggerFunction);
 
@@ -184,10 +189,11 @@ void setup()
 void loop()
 {
   pixelsUpdateTimer.update();
-  irSensorCooldownTimer.update();
   sensor_UpdateIntervalTimer.update();
   wifiServerUpdateTimer.update();
   checkAkkuTimer.update();
+  displayAkkuTimer.update();
+  
   handleMode();
   readSerial();
 }
@@ -197,7 +203,7 @@ void wifiUpdate()
   {  
     return;
   }
-  Serial.print("color]");
+  writeSerial("color");
   //-------------einzeltest
   pixels_color.red = random(0,100);
   pixels_color.green = random(0,100);
@@ -229,9 +235,20 @@ void readSerial()
     if(inputBuffer.indexOf("data") != -1)  //data|
     {
       inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
-      
+      if(inputBuffer.indexOf("voltage") != -1)  
+      {
+        inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
+        displayAkkuTimer.start(atoi(inputBuffer.c_str())*1000);
+        MODE(modus_akku);
+        RGB_MODE(RGB_akku);
+        writeSerial("voltage|"+String(akkuVoltage));
+      }
     }
   }
+}
+void writeSerial(String data)
+{
+  Serial.print(data+"]");
 }
 void sensorUpdateFunction()
 {
@@ -301,7 +318,7 @@ void triggerFunction()
 }
 void updateRGB()
 {
-  switch(rgb_mode)
+  switch(RGB_MODE())
   {
     case RGB_none:
     {
@@ -386,23 +403,9 @@ void IR_highTriggerFunction()
   #ifdef DEBUG
     Serial.println("IR_sensor trigger high");
   #endif
-  
-  /*irSensorCooldownTimer.stop();
-  irSensorCooldownTimer.start(1000);
-  MODE(modus_rgbTest);*/
- /* pixels_enable = false;
-  MODE(modus_none);*/
   triggerFunction();
 }
 
-void irSensorCooldownTimerFinishedFunction()
-{
-  #ifdef DEBUG
-    Serial.println("TIMER");
-  #endif
-  pixels_enable = false;
-  MODE(modus_none);
-}
 
 void handleMode()
 {
@@ -418,37 +421,14 @@ void handleMode()
       pixels_enable = true;
       mode_reflex_Timer.start();
       mode_reflex_time = 0;
-      rgb_mode = RGB_normal;
+      RGB_MODE(RGB_normal);
       //updateRGB();
       
       break;
     }
-    case modus_akkuLow:
+    case modus_akku:
     {
-      
-     /* pixels_enable = true;
-      if(mode_akkuLowTimer.start(10))
-      {
-        if(mode_akkuLow_dumUp)
-        {
-          pixels_color.red++;
-        }
-        else
-        {
-          pixels_color.red--;
-        }
-      }
-
-      if(mode_akkuLow_colorRed >= 50)
-      {
-        mode_akkuLow_dumUp = false;
-      }else if(mode_akkuLow_colorRed <= 0)
-      {
-        mode_akkuLow_dumUp = true;
-      }*/
-
-      //LED_akku();
-      rgb_mode = RGB_akku;
+      RGB_MODE(RGB_akku);
       break;
     }
   }
@@ -468,12 +448,23 @@ modus LASTMODE()
 {
   return lastMode;
 }
-
+void RGB_MODE(RGB_mode m)
+{
+  last_rgb_mode = rgb_mode;
+  rgb_mode = m;
+}
+RGB_mode RGB_MODE()
+{
+  return rgb_mode;
+}
+RGB_mode LAST_RGB_MODE()
+{
+  return last_rgb_mode;
+}
 
 
 void calibration()
 {
-  //Serial.println("calibration");
   float ax = 0;
   float ay = 0;
   float az = 0;
@@ -492,8 +483,6 @@ void calibration()
   }
   aGes /= 10;
   int map_firstError = sqrt((aGes - toAZ)*(aGes - toAZ)) * 150;
-  //Serial.print("map_firstError: ");
-  //Serial.println(map_firstError);
   bool ret = false;
   rgb_mode = RGB_loading;
   while(!ret)
@@ -517,43 +506,17 @@ void calibration()
       ay /= 10;
       az /= 10;
       aGes = sqrt(ax*ax+ay*ay+az*az);
-      /*
-      Serial.print("average x:  ");
-      Serial.print(ax);
-      Serial.print("\ty:  ");
-      Serial.print(ay);
-      Serial.print("\tz:  ");
-      Serial.print(az);
-      Serial.print("\tges:");
-      Serial.print(aGes);
-      Serial.print("\t");
-      */
-      
-
       error = aGes - toAZ;
       error = sqrt(error*error);
       
       if(error < endError && sqrt(ax*ax)-toAX < endError && sqrt(ay*ay)-toAY < endError && sqrt(az*az)-toAZ < endError)
       {
-        //Serial.print("End error: ");
-        //Serial.println(error);
         ret = true;
       }
           
       int16_t offsetX = (toAX-ax) * 10 + accelgyro.getXAccelOffset();
       int16_t offsetY = (toAY-ay) * 10 + accelgyro.getYAccelOffset();
       int16_t offsetZ = (toAZ-az) * 10 + accelgyro.getZAccelOffset();
-      /*
-      Serial.print("set to ofset: ax: ");
-      Serial.print(offsetX);
-      Serial.print("\tay: ");
-      Serial.print(offsetY);
-      Serial.print("\taz: ");
-      Serial.print(offsetZ);
-
-      Serial.print("\terror: ");
-      Serial.println(error);
-      */
       accelgyro.setXAccelOffset(offsetX);
       accelgyro.setYAccelOffset(offsetY);
       accelgyro.setZAccelOffset(offsetZ);
@@ -601,7 +564,7 @@ void checkAkku()
   if(akkuVoltage < minAkkuVoltage)
   {
     //Serial.println("voltage is to low");
-    MODE(modus_akkuLow);
+    MODE(modus_akku);
     pixels_color.red = 0;
     pixels_color.green = 0;
     pixels_color.blue = 0;
@@ -612,5 +575,12 @@ void checkAkku()
   {
     //MODE(mode_none);
   }
+}
+
+
+void displayAkkuTimerFunction()
+{
+  MODE(LASTMODE());
+  RGB_MODE(LAST_RGB_MODE());
 }
 
