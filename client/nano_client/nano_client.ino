@@ -1,7 +1,7 @@
 /*
 Autor Alex Krieg
 Datum 28.06.2018
-Version 0.2.2
+Version 0.2.3
 */
 
 #include <Adafruit_NeoPixel.h>
@@ -66,15 +66,16 @@ unsigned int mode_reflex_time = 0;
 
 //---------
 bool mode_akkuLow_dimUp = true;
-Timer mode_akkuLowTimer;
+Timer mode_akkuTimer;
 Timer displayAkkuTimer;
 byte mode_akkuLow_colorRed = 0;
-byte mode_akkuLow_numLedOn = 1;
+byte mode_akku_numLedOn = 1;
 //------------------------------
 
 const float accelerationTrigger = 3.0;
 float gesAcceleration = 0;
-float akkuVoltage = 11.00;
+float maxAkkuVoltage = 9.00;
+float akkuVoltage = 9.00;
 float minAkkuVoltage = 7.0; // 7.0V
 Timer checkAkkuTimer;
 
@@ -111,7 +112,7 @@ void setup()
 {
   Serial.begin(115200);
   Serial.print("version: ");
-  Serial.println("0.2.0");
+  Serial.println("0.2.3");
   accelgyro.initialize();
   #if defined (__AVR_ATtiny85__)
     if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
@@ -129,7 +130,7 @@ void setup()
   sensor_UpdateIntervalTimer.start(20);
   pixelsUpdateTimer.onFinished(updateRGB);
   pixelsUpdateTimer.autoRestart(true);
-  pixelsUpdateTimer.start(100);
+  pixelsUpdateTimer.start(20);
   wifiServerUpdateTimer.onFinished(wifiUpdate);
   wifiServerUpdateTimer.autoRestart(true);
   wifiServerUpdateTimer.start(3000);
@@ -237,10 +238,13 @@ void readSerial()
       inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
       if(inputBuffer.indexOf("voltage") != -1)  
       {
-        inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
-        displayAkkuTimer.start(atoi(inputBuffer.c_str())*1000);
-        MODE(modus_akku);
-        RGB_MODE(RGB_akku);
+        if(MODE() != modus_akku && RGB_MODE() != RGB_akku)
+        {
+          inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
+          displayAkkuTimer.start(atoi(inputBuffer.c_str())*1000);
+          MODE(modus_akku);
+          RGB_MODE(RGB_akku);
+        }
         writeSerial("voltage|"+String(akkuVoltage));
       }
     }
@@ -318,6 +322,7 @@ void triggerFunction()
 }
 void updateRGB()
 {
+  if(RGB_MODE() != RGB_akku){mode_akku_numLedOn = 0;} 
   switch(RGB_MODE())
   {
     case RGB_none:
@@ -349,19 +354,19 @@ void updateRGB()
     }
     case RGB_akku:
     {
-      if(mode_akkuLowTimer.start(100))
+      if(mode_akkuTimer.start(40))
       {
           for(int a=0; a<NUMPIXELS; a++)
           {
             pixels.setPixelColor(a,0,0,0);
           }
-          byte pixelPos = map((int)((akkuVoltage-(minAkkuVoltage-1.0))*100),0,1100-(minAkkuVoltage-1.0)*100.0,1,NUMPIXELS);
+          byte pixelPos = map((int)((akkuVoltage-(minAkkuVoltage-1.0))*100),0,(maxAkkuVoltage-(minAkkuVoltage-1.0))*100.0,1,NUMPIXELS);
           for(int a=0; a<pixelPos; a++)
           {
             //map((long)(akkuVoltage*100)%NUMPIXELS,0,1223/NUMPIXELS,0,30)
-            if(mode_akkuLow_numLedOn > 25)
-              mode_akkuLow_numLedOn = 0;
-            if(a>mode_akkuLow_numLedOn)
+           /* if(mode_akku_numLedOn > 25)
+              mode_akku_numLedOn = 0;*/
+            if(a>mode_akku_numLedOn)
               continue;
              int brightness = 100;
              if(a == pixelPos-1)
@@ -371,7 +376,7 @@ void updateRGB()
              //  Serial.println(brightness);
              //  brightness = map(akkuVoltage*100-brightness*pixelPos,0,brightness*NUMPIXELS,0,100);
               // brightness = map((1100-(akkuVoltage-(minAkkuVoltage-1.0))*100),0,brightness
-               brightness = (int)(1100-(minAkkuVoltage-1.0)*100)  / NUMPIXELS;
+               brightness = (int)((maxAkkuVoltage-(minAkkuVoltage-1.0))*100)  / NUMPIXELS;
               // Serial.print(brightness);
                brightness = map((int)((akkuVoltage-(minAkkuVoltage-1.0))*100)% NUMPIXELS,0,brightness,0,100);
              //  Serial.print(" ");
@@ -380,9 +385,9 @@ void updateRGB()
              pixels.setPixelColor(a,brightness*map(a,0,NUMPIXELS,30,0)/100,brightness*map(a,0,NUMPIXELS,0,30)/100,0);
           }
           pixels.show();
-          //if(mode_akkuLow_numLedOn < NUMPIXELS)
+          if(mode_akku_numLedOn < pixelPos+1)
           {
-            mode_akkuLow_numLedOn++;
+            mode_akku_numLedOn++;
           }
       }
       break;
