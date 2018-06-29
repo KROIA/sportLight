@@ -2,13 +2,28 @@ writing to server:
 {
 	color|100|100|100|								// color|red|green|blue|
 	voltage|1.0										// voltage|volts
-
+	voltageLow|7.0									// voltageLow|volts
+	voltageDOut|6.0									// voltageDOut|volts
+	brightness|100									// brightness|br
+	reactionTime|1.5								// reactionTime|timeSec
+	trigger|1										// trigger|1
 }
 
 reading from server:
 {
-	data|+
-		voltage|5									// data|voltage|timeSec
+	set|+
+		color|100|100|100|							// set|color|red|green|blue|
+		brightness|100								// set|brightness|br
+		reactionTime|1								// set|reactionTime|1
+		trigger|1									// set|trigger|1
+		
+	get|+
+		color
+		brightness
+		voltage
+		
+	mode|+
+		voltage|5									// mode|voltage|timeSec
 }
 
 endByte: `]`
