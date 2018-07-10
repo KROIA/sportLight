@@ -11673,10 +11673,10 @@ RESET
 VCC</text>
 <text x="13.97" y="157.48" size="1.778" layer="97">GND
 7-12V</text>
-<text x="231.14" y="105.41" size="1.778" layer="97" rot="MR180">5V
-GND
-SCL
-SDA</text>
+<text x="231.14" y="105.41" size="1.778" layer="97" rot="MR180">GND
+5V
+SDA
+SCL</text>
 <text x="180.34" y="78.105" size="1.778" layer="97" distance="44">VIN
 GND
 RST
@@ -11840,20 +11840,6 @@ GND    black</text>
 <wire x1="74.93" y1="111.76" x2="165.1" y2="111.76" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$20" class="0">
-<segment>
-<pinref part="DISPLAY" gate="A" pin="3"/>
-<pinref part="ARDUINO-2" gate="A" pin="9"/>
-<wire x1="224.79" y1="99.06" x2="190.5" y2="99.06" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$21" class="0">
-<segment>
-<pinref part="DISPLAY" gate="A" pin="4"/>
-<pinref part="ARDUINO-2" gate="A" pin="8"/>
-<wire x1="224.79" y1="96.52" x2="190.5" y2="96.52" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="N$1" class="0">
 <segment>
 <pinref part="L1" gate="G$1" pin="1"/>
@@ -12011,15 +11997,15 @@ GND    black</text>
 <wire x1="87.63" y1="137.16" x2="87.63" y2="134.62" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="DISPLAY" gate="A" pin="2"/>
-<wire x1="224.79" y1="101.6" x2="212.09" y2="101.6" width="0.1524" layer="91"/>
-<wire x1="212.09" y1="101.6" x2="205.74" y2="101.6" width="0.1524" layer="91"/>
-<wire x1="205.74" y1="101.6" x2="205.74" y2="111.76" width="0.1524" layer="91"/>
+<wire x1="212.09" y1="104.14" x2="208.28" y2="104.14" width="0.1524" layer="91"/>
+<wire x1="208.28" y1="104.14" x2="208.28" y2="111.76" width="0.1524" layer="91"/>
 <pinref part="ARDUINO-2" gate="A" pin="14"/>
-<wire x1="190.5" y1="111.76" x2="205.74" y2="111.76" width="0.1524" layer="91"/>
+<wire x1="190.5" y1="111.76" x2="208.28" y2="111.76" width="0.1524" layer="91"/>
 <pinref part="GND5" gate="1" pin="GND"/>
-<wire x1="212.09" y1="87.63" x2="212.09" y2="101.6" width="0.1524" layer="91"/>
-<junction x="212.09" y="101.6"/>
+<wire x1="212.09" y1="87.63" x2="212.09" y2="104.14" width="0.1524" layer="91"/>
+<junction x="212.09" y="104.14"/>
+<pinref part="DISPLAY" gate="A" pin="1"/>
+<wire x1="212.09" y1="104.14" x2="224.79" y2="104.14" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$2" class="0">
@@ -12061,13 +12047,9 @@ GND    black</text>
 </net>
 <net name="N$18" class="0">
 <segment>
-<wire x1="212.09" y1="104.14" x2="208.28" y2="104.14" width="0.1524" layer="91"/>
-<wire x1="208.28" y1="104.14" x2="208.28" y2="106.68" width="0.1524" layer="91"/>
+<wire x1="205.74" y1="101.6" x2="205.74" y2="106.68" width="0.1524" layer="91"/>
 <pinref part="ARDUINO-2" gate="A" pin="12"/>
-<wire x1="190.5" y1="106.68" x2="208.28" y2="106.68" width="0.1524" layer="91"/>
-<junction x="212.09" y="104.14"/>
-<pinref part="DISPLAY" gate="A" pin="1"/>
-<wire x1="212.09" y1="104.14" x2="224.79" y2="104.14" width="0.1524" layer="91"/>
+<wire x1="190.5" y1="106.68" x2="205.74" y2="106.68" width="0.1524" layer="91"/>
 <pinref part="L2" gate="G$1" pin="2"/>
 <pinref part="C4" gate="G$1" pin="P$2"/>
 <wire x1="181.61" y1="144.78" x2="184.15" y2="144.78" width="0.1524" layer="91"/>
@@ -12101,9 +12083,30 @@ GND    black</text>
 <pinref part="TASTER" gate="A" pin="2"/>
 <wire x1="97.79" y1="96.52" x2="91.44" y2="96.52" width="0.1524" layer="91"/>
 <wire x1="91.44" y1="125.73" x2="91.44" y2="96.52" width="0.1524" layer="91"/>
-<wire x1="212.09" y1="104.14" x2="212.09" y2="125.73" width="0.1524" layer="91"/>
-<wire x1="212.09" y1="125.73" x2="189.23" y2="125.73" width="0.1524" layer="91"/>
+<wire x1="205.74" y1="106.68" x2="205.74" y2="125.73" width="0.1524" layer="91"/>
+<wire x1="205.74" y1="125.73" x2="189.23" y2="125.73" width="0.1524" layer="91"/>
 <junction x="189.23" y="125.73"/>
+<pinref part="DISPLAY" gate="A" pin="2"/>
+<wire x1="205.74" y1="101.6" x2="224.79" y2="101.6" width="0.1524" layer="91"/>
+<junction x="205.74" y="106.68"/>
+</segment>
+</net>
+<net name="N$8" class="0">
+<segment>
+<pinref part="DISPLAY" gate="A" pin="3"/>
+<wire x1="224.79" y1="99.06" x2="209.55" y2="99.06" width="0.1524" layer="91"/>
+<wire x1="209.55" y1="99.06" x2="207.01" y2="96.52" width="0.1524" layer="91"/>
+<pinref part="ARDUINO-2" gate="A" pin="8"/>
+<wire x1="207.01" y1="96.52" x2="190.5" y2="96.52" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$10" class="0">
+<segment>
+<pinref part="ARDUINO-2" gate="A" pin="9"/>
+<wire x1="190.5" y1="99.06" x2="207.01" y2="99.06" width="0.1524" layer="91"/>
+<wire x1="207.01" y1="99.06" x2="209.55" y2="96.52" width="0.1524" layer="91"/>
+<pinref part="DISPLAY" gate="A" pin="4"/>
+<wire x1="209.55" y1="96.52" x2="224.79" y2="96.52" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>

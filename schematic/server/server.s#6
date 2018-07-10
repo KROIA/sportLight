@@ -11348,12 +11348,31 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <text x="-2.54" y="-2.54" size="1.778" layer="96">&gt;VALUE</text>
 <pin name="GND" x="0" y="2.54" visible="off" length="short" direction="sup" rot="R270"/>
 </symbol>
+<symbol name="VCC" urn="urn:adsk.eagle:symbol:26928/1" library_version="1">
+<wire x1="1.27" y1="-1.905" x2="0" y2="0" width="0.254" layer="94"/>
+<wire x1="0" y1="0" x2="-1.27" y2="-1.905" width="0.254" layer="94"/>
+<text x="-2.54" y="-2.54" size="1.778" layer="96" rot="R90">&gt;VALUE</text>
+<pin name="VCC" x="0" y="-2.54" visible="off" length="short" direction="sup" rot="R90"/>
+</symbol>
 </symbols>
 <devicesets>
 <deviceset name="GND" urn="urn:adsk.eagle:component:26954/1" prefix="GND" library_version="1">
 <description>&lt;b&gt;SUPPLY SYMBOL&lt;/b&gt;</description>
 <gates>
 <gate name="1" symbol="GND" x="0" y="0"/>
+</gates>
+<devices>
+<device name="">
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="VCC" urn="urn:adsk.eagle:component:26957/1" prefix="P+" library_version="1">
+<description>&lt;b&gt;SUPPLY SYMBOL&lt;/b&gt;</description>
+<gates>
+<gate name="VCC" symbol="VCC" x="0" y="0"/>
 </gates>
 <devices>
 <device name="">
@@ -11642,6 +11661,11 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <part name="GND2" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
 <part name="GND3" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
 <part name="GND4" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
+<part name="5V" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="VCC" device="" value="3.3V"/>
+<part name="P+2" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="VCC" device="" value="5V"/>
+<part name="P+1" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="VCC" device="" value="5V"/>
+<part name="5V1" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="VCC" device="" value="3.3V"/>
+<part name="P+3" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="VCC" device="" value="5V"/>
 <part name="GND5" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
 </parts>
 <sheets>
@@ -11746,6 +11770,11 @@ GND    black</text>
 <instance part="GND2" gate="1" x="158.75" y="132.08"/>
 <instance part="GND3" gate="1" x="87.63" y="132.08"/>
 <instance part="GND4" gate="1" x="24.13" y="36.83"/>
+<instance part="5V" gate="VCC" x="118.11" y="149.86"/>
+<instance part="P+2" gate="VCC" x="189.23" y="149.86"/>
+<instance part="P+1" gate="VCC" x="91.44" y="104.14" rot="MR0"/>
+<instance part="5V1" gate="VCC" x="15.24" y="53.34"/>
+<instance part="P+3" gate="VCC" x="212.09" y="114.3"/>
 <instance part="GND5" gate="1" x="212.09" y="85.09"/>
 </instances>
 <busses>
@@ -12022,18 +12051,31 @@ GND    black</text>
 <junction x="212.09" y="101.6"/>
 </segment>
 </net>
-<net name="N$2" class="0">
+<net name="VCC" class="0">
 <segment>
-<pinref part="TASTER" gate="A" pin="3"/>
-<wire x1="105.41" y1="93.98" x2="142.24" y2="93.98" width="0.1524" layer="91"/>
-<pinref part="R11" gate="G$1" pin="2"/>
-<wire x1="142.24" y1="93.98" x2="142.24" y2="81.28" width="0.1524" layer="91"/>
-<pinref part="ARDUINO-1" gate="A" pin="9"/>
-<wire x1="142.24" y1="93.98" x2="165.1" y2="93.98" width="0.1524" layer="91"/>
-<junction x="142.24" y="93.98"/>
+<pinref part="L1" gate="G$1" pin="2"/>
+<pinref part="C3" gate="G$1" pin="P$2"/>
+<wire x1="110.49" y1="144.78" x2="113.03" y2="144.78" width="0.1524" layer="91"/>
+<wire x1="113.03" y1="144.78" x2="113.03" y2="149.86" width="0.1524" layer="91"/>
+<pinref part="IC1-3.3V" gate="NC1" pin="OUT"/>
+<wire x1="113.03" y1="149.86" x2="97.79" y2="149.86" width="0.1524" layer="91"/>
+<junction x="113.03" y="144.78"/>
+<wire x1="113.03" y1="144.78" x2="118.11" y2="144.78" width="0.1524" layer="91"/>
+<pinref part="5V" gate="VCC" pin="VCC"/>
+<wire x1="118.11" y1="144.78" x2="118.11" y2="147.32" width="0.1524" layer="91"/>
 </segment>
-</net>
-<net name="N$4" class="0">
+<segment>
+<pinref part="L2" gate="G$1" pin="2"/>
+<pinref part="C4" gate="G$1" pin="P$2"/>
+<wire x1="181.61" y1="144.78" x2="184.15" y2="144.78" width="0.1524" layer="91"/>
+<pinref part="IC2-5V" gate="NC1" pin="OUT"/>
+<wire x1="184.15" y1="144.78" x2="184.15" y2="149.86" width="0.1524" layer="91"/>
+<wire x1="184.15" y1="149.86" x2="168.91" y2="149.86" width="0.1524" layer="91"/>
+<junction x="184.15" y="144.78"/>
+<wire x1="184.15" y1="144.78" x2="189.23" y2="144.78" width="0.1524" layer="91"/>
+<pinref part="P+2" gate="VCC" pin="VCC"/>
+<wire x1="189.23" y1="144.78" x2="189.23" y2="147.32" width="0.1524" layer="91"/>
+</segment>
 <segment>
 <pinref part="C2" gate="G$1" pin="P$2"/>
 <pinref part="WLAN-MODUL" gate="A" pin="2"/>
@@ -12043,41 +12085,23 @@ GND    black</text>
 <wire x1="24.13" y1="60.96" x2="24.13" y2="55.88" width="0.1524" layer="91"/>
 <junction x="24.13" y="55.88"/>
 <wire x1="24.13" y1="55.88" x2="24.13" y2="50.8" width="0.1524" layer="91"/>
+<pinref part="5V1" gate="VCC" pin="VCC"/>
 <wire x1="24.13" y1="50.8" x2="24.13" y2="49.53" width="0.1524" layer="91"/>
 <wire x1="15.24" y1="50.8" x2="24.13" y2="50.8" width="0.1524" layer="91"/>
 <junction x="24.13" y="50.8"/>
-<wire x1="15.24" y1="50.8" x2="15.24" y2="123.19" width="0.1524" layer="91"/>
-<wire x1="15.24" y1="123.19" x2="119.38" y2="123.19" width="0.1524" layer="91"/>
-<pinref part="L1" gate="G$1" pin="2"/>
-<pinref part="C3" gate="G$1" pin="P$2"/>
-<wire x1="110.49" y1="144.78" x2="113.03" y2="144.78" width="0.1524" layer="91"/>
-<wire x1="113.03" y1="144.78" x2="113.03" y2="149.86" width="0.1524" layer="91"/>
-<pinref part="IC1-3.3V" gate="NC1" pin="OUT"/>
-<wire x1="113.03" y1="149.86" x2="97.79" y2="149.86" width="0.1524" layer="91"/>
-<junction x="113.03" y="144.78"/>
-<wire x1="113.03" y1="144.78" x2="119.38" y2="144.78" width="0.1524" layer="91"/>
-<wire x1="119.38" y1="123.19" x2="119.38" y2="144.78" width="0.1524" layer="91"/>
 </segment>
-</net>
-<net name="N$18" class="0">
 <segment>
 <wire x1="212.09" y1="104.14" x2="208.28" y2="104.14" width="0.1524" layer="91"/>
 <wire x1="208.28" y1="104.14" x2="208.28" y2="106.68" width="0.1524" layer="91"/>
 <pinref part="ARDUINO-2" gate="A" pin="12"/>
 <wire x1="190.5" y1="106.68" x2="208.28" y2="106.68" width="0.1524" layer="91"/>
+<pinref part="P+3" gate="VCC" pin="VCC"/>
+<wire x1="212.09" y1="111.76" x2="212.09" y2="104.14" width="0.1524" layer="91"/>
 <junction x="212.09" y="104.14"/>
 <pinref part="DISPLAY" gate="A" pin="1"/>
 <wire x1="212.09" y1="104.14" x2="224.79" y2="104.14" width="0.1524" layer="91"/>
-<pinref part="L2" gate="G$1" pin="2"/>
-<pinref part="C4" gate="G$1" pin="P$2"/>
-<wire x1="181.61" y1="144.78" x2="184.15" y2="144.78" width="0.1524" layer="91"/>
-<pinref part="IC2-5V" gate="NC1" pin="OUT"/>
-<wire x1="184.15" y1="144.78" x2="184.15" y2="149.86" width="0.1524" layer="91"/>
-<wire x1="184.15" y1="149.86" x2="168.91" y2="149.86" width="0.1524" layer="91"/>
-<junction x="184.15" y="144.78"/>
-<wire x1="184.15" y1="144.78" x2="189.23" y2="144.78" width="0.1524" layer="91"/>
-<wire x1="189.23" y1="144.78" x2="189.23" y2="125.73" width="0.1524" layer="91"/>
-<wire x1="189.23" y1="125.73" x2="91.44" y2="125.73" width="0.1524" layer="91"/>
+</segment>
+<segment>
 <junction x="91.44" y="96.52"/>
 <wire x1="91.44" y1="93.98" x2="91.44" y2="96.52" width="0.1524" layer="91"/>
 <junction x="91.44" y="93.98"/>
@@ -12088,6 +12112,8 @@ GND    black</text>
 <wire x1="91.44" y1="86.36" x2="91.44" y2="88.9" width="0.1524" layer="91"/>
 <junction x="91.44" y="86.36"/>
 <wire x1="91.44" y1="83.82" x2="91.44" y2="86.36" width="0.1524" layer="91"/>
+<pinref part="P+1" gate="VCC" pin="VCC"/>
+<wire x1="91.44" y1="101.6" x2="91.44" y2="96.52" width="0.1524" layer="91"/>
 <pinref part="TASTER" gate="A" pin="12"/>
 <wire x1="97.79" y1="83.82" x2="91.44" y2="83.82" width="0.1524" layer="91"/>
 <pinref part="TASTER" gate="A" pin="10"/>
@@ -12100,10 +12126,17 @@ GND    black</text>
 <wire x1="97.79" y1="93.98" x2="91.44" y2="93.98" width="0.1524" layer="91"/>
 <pinref part="TASTER" gate="A" pin="2"/>
 <wire x1="97.79" y1="96.52" x2="91.44" y2="96.52" width="0.1524" layer="91"/>
-<wire x1="91.44" y1="125.73" x2="91.44" y2="96.52" width="0.1524" layer="91"/>
-<wire x1="212.09" y1="104.14" x2="212.09" y2="125.73" width="0.1524" layer="91"/>
-<wire x1="212.09" y1="125.73" x2="189.23" y2="125.73" width="0.1524" layer="91"/>
-<junction x="189.23" y="125.73"/>
+</segment>
+</net>
+<net name="N$2" class="0">
+<segment>
+<pinref part="TASTER" gate="A" pin="3"/>
+<wire x1="105.41" y1="93.98" x2="142.24" y2="93.98" width="0.1524" layer="91"/>
+<pinref part="R11" gate="G$1" pin="2"/>
+<wire x1="142.24" y1="93.98" x2="142.24" y2="81.28" width="0.1524" layer="91"/>
+<pinref part="ARDUINO-1" gate="A" pin="9"/>
+<wire x1="142.24" y1="93.98" x2="165.1" y2="93.98" width="0.1524" layer="91"/>
+<junction x="142.24" y="93.98"/>
 </segment>
 </net>
 </nets>
