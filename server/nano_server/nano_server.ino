@@ -1,8 +1,6 @@
-/*
-Version 0.0.2
-Autor Alex Krieg
-Datum 11.07.2018
-*/
+#define VERSION  "0.0.2"
+//      Autor Alex Krieg
+//      Datum 11.07.2018
 
 
 #include <Wire.h> 
@@ -14,10 +12,13 @@ enum mode
 {
   mode_none = 0,
   mode_menue = 1,
-  mode_akku = 2
+  mode_info = 2,
 };
-mode modus = mode_none;
-mode lastModus = mode_none;
+mode modus = mode_menue;
+mode lastModus = mode_menue;
+
+byte selection = 0;
+
 //-------------------AKKU-----------------
 #define AKKUPIN A1
 float maxAkkuVoltage = 9.00;
@@ -61,20 +62,10 @@ void displayUpdate();
 
 void setup()
 {
-  pinMode(A1,INPUT);
+  pinMode(AKKUPIN,INPUT);
   Serial.begin(115200);
-
-  Serial.println("SETUP");
   lcd.init();  
   lcd.backlight();
-  lcd.setCursor(3,0);
-  lcd.print("Hello, world!");
-  lcd.setCursor(2,1);
-  lcd.print("Ywrobot Arduino!");
-  lcd.setCursor(0,2);
-  lcd.print("Arduino LCM IIC 0010");
-  lcd.setCursor(2,3);
-  lcd.print("Power By Ec-yuan!");
   button_1.OnPressedEdge(b1H);
   button_2.OnPressedEdge(b2H);
   button_3.OnPressedEdge(b3H);
@@ -120,6 +111,7 @@ void MODE(mode m)
 {
   lastModus = modus;
   modus = m;
+  lcd.clear();
 }
 mode MODE()
 {
@@ -131,23 +123,47 @@ mode LASTMODE()
 }
 void b1H()
 {
-  Serial.println("Button 1");
-  if(MODE() == mode_akku)
-  {
-    MODE(LASTMODE()); 
-  }
-  else
-  {
-    MODE(mode_akku); 
-  }
+  Serial.println("Button back");
+  MODE(LASTMODE());
 }
 void b2H()
 {
-  Serial.println("Button 2");
+  Serial.println("Button ok");
+  switch(MODE())
+  {
+    case mode_menue:
+    {
+      switch(selection)
+      {
+        case 0://Info
+        {
+          MODE(mode_info);
+          break;
+        }
+        case 1://Mode
+        {
+          
+          break;
+        }
+      }
+      break; 
+    }
+  }
 }
 void b3H()
 {
-  Serial.println("Button 3");
+  Serial.println("Button up");
+  switch(MODE())
+  {
+     case mode_menue:
+     {
+       if(selection > 0)
+       {
+         selection--;
+       }
+       break;
+     }
+  }
 }
 void b4H()
 {
@@ -155,7 +171,18 @@ void b4H()
 }
 void b5H()
 {
-  Serial.println("Button 5");
+  Serial.println("Button down");
+  switch(MODE())
+  {
+     case mode_menue:
+     {
+       if(selection < 1)// max menue positions 0 - 1
+       {
+         selection++;
+       } 
+       break;
+     }
+  }
 }
 void b6H()
 {
@@ -179,6 +206,7 @@ void checkAkku()
       {
         writeSerial("voltageDOut|"+String(akkuVoltage));
         shutDownAkku = true;
+        lcd.noBacklight();
       }
     }
     else
@@ -191,6 +219,7 @@ void checkAkku()
       if(shutDownAkku)
       {
         shutDownAkku = false;
+        lcd.backlight();
       }
     }
   }
@@ -206,15 +235,85 @@ void displayUpdate()
   {
     case mode_none:
     {
-      lcd.clear();
-      break;
+       lcd.clear();
+       break;
     } 
-    case mode_akku:
+    case mode_menue:
     {
-       lcd.setCursor(0,0);
-       lcd.print("Akku: "+String(akkuPercent)+"%    ");
-       lcd.setCursor(0,1);
-       lcd.print("Voltage: "+String(akkuVoltage)+"V    ");
+       switch(selection)
+       {
+         case 0:
+         {
+           lcd_menue_info(true,0);
+           lcd_menue_modus(false,1);
+           break; 
+         }
+         case 1:
+         {
+           lcd_menue_info(false,0);
+           lcd_menue_modus(true,1);
+           break; 
+         }
+       }
+       break; 
+    }
+    case mode_info:
+    {
+       lcd_info();
+       break; 
     }
   }
 }
+
+
+
+
+//------------------DISPLAY------------------
+
+void lcd_print(String message,byte x,byte y)
+{
+  lcd.setCursor(x,y);
+  lcd.print(message);
+}
+
+//----------------------------------------------------MENUE----
+void lcd_menue_info(bool selected,byte y)
+{
+  String message = "Info              ";
+  if(selected){lcd_print("- "+message,0,y);}
+  else{        lcd_print("  "+message,0,y);}
+}
+void lcd_menue_modus(bool selected,byte y)
+{
+  String message = "Modus             ";
+  if(selected){lcd_print("- "+message,0,y);}
+  else{        lcd_print("  "+message,0,y);}
+}
+//-------------------------------------------------------------
+//----------------------------------------------------INFO-----
+void lcd_info()
+{
+  lcd.setCursor(0,0);
+  lcd.print("Version: "+String(VERSION)+"      ");
+  lcd.setCursor(0,1);
+  lcd.print("Akku: "+String(akkuPercent)+"%    ");
+  lcd.setCursor(0,2);
+  lcd.print("Voltage: "+String(akkuVoltage)+"V    ");
+}
+//-------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
