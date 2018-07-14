@@ -117,8 +117,8 @@ modus LASTMODE();
 void setup()
 {
   Serial.begin(115200);
-  Serial.print("version: ");
-  Serial.println("0.2.5");
+ // Serial.print("version: ");
+//  Serial.println("0.2.5");
   accelgyro.initialize();
   #if defined (__AVR_ATtiny85__)
     if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
@@ -191,6 +191,7 @@ void readSerial()
       Serial.print("serialRead: ");
       Serial.println(inputBuffer);
     #endif
+    if(inputBuffer.indexOf("D: ") == 0){return;}
 //-----------------------------------------------SET-----------------------------------------
     if(inputBuffer.indexOf("set") == 0)
     {

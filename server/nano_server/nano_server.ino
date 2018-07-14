@@ -1,6 +1,6 @@
-#define VERSION  "0.0.2"
+#define VERSION  "0.0.3"
 //      Autor Alex Krieg
-//      Datum 11.07.2018
+//      Datum 13.07.2018
 
 
 #include <Wire.h> 
@@ -21,10 +21,10 @@ byte selection = 0;
 
 //-------------------AKKU-----------------
 #define AKKUPIN A1
-float maxAkkuVoltage = 9.00;
-float akkuVoltage = 9.00;
+float maxAkkuVoltage = 7.20;
+float akkuVoltage = 7.20;
 int akkuPercent = 100;
-float minAkkuVoltage = 7.0; // 7.0V
+float minAkkuVoltage = 6.5; // 6.0V
 float shutDownAkkuVoltage = 6.0;
 bool shutDownAkku = false;
 bool lowAkku = false;
@@ -42,6 +42,10 @@ Button button_4(8);
 Button button_5(9);
 Button button_6(10);
 Timer buttonUpdateTimer;
+
+//-------------------------------BOX
+float voltage_Box1 = 0;
+//----------------------------------
 
 void readSerial();
 void writeSerial(String data);
@@ -95,12 +99,29 @@ void loop()
   }
   displayUpdateTimer.update();
   checkAkkuTimer.update();
-  
+  readSerial();
 }
 
 void readSerial()
 {
-  
+  String message = "";
+  if(Serial.available() != 0)
+  {
+    message = Serial.readStringUntil(']');
+  }
+  else{return;}
+
+  if(message.indexOf("box") == 0)
+  {
+    message = message.substring(3);
+    int boxNr = atoi(message.substring(0,message.indexOf("|")).c_str());
+    message = message.substring(message.indexOf("|")+1);
+    if(message.indexOf("voltage") == 0)
+    {
+      float voltage = message.substring(message.indexOf("|")+1).toFloat();
+      voltage_Box1 = voltage;
+    }
+  }
 }
 void writeSerial(String data)
 {
@@ -123,12 +144,12 @@ mode LASTMODE()
 }
 void b1H()
 {
-  Serial.println("Button back");
+ // Serial.println("Button back");
   MODE(LASTMODE());
 }
 void b2H()
 {
-  Serial.println("Button ok");
+ // Serial.println("Button ok");
   switch(MODE())
   {
     case mode_menue:
@@ -137,6 +158,7 @@ void b2H()
       {
         case 0://Info
         {
+          writeSerial("tbox1|gvoltage");
           MODE(mode_info);
           break;
         }
@@ -152,7 +174,7 @@ void b2H()
 }
 void b3H()
 {
-  Serial.println("Button up");
+ // Serial.println("Button up");
   switch(MODE())
   {
      case mode_menue:
@@ -167,11 +189,11 @@ void b3H()
 }
 void b4H()
 {
-  Serial.println("Button 4");
+//  Serial.println("Button 4");
 }
 void b5H()
 {
-  Serial.println("Button down");
+//  Serial.println("Button down");
   switch(MODE())
   {
      case mode_menue:
@@ -186,7 +208,7 @@ void b5H()
 }
 void b6H()
 {
-  Serial.println("Button 6");
+//  Serial.println("Button 6");
 }
 void checkAkku()
 {
@@ -299,6 +321,8 @@ void lcd_info()
   lcd.print("Akku: "+String(akkuPercent)+"%    ");
   lcd.setCursor(0,2);
   lcd.print("Voltage: "+String(akkuVoltage)+"V    ");
+  lcd.setCursor(0,3);
+  lcd.print("Box1: "+String(voltage_Box1)+"V    ");
 }
 //-------------------------------------------------------------
 
