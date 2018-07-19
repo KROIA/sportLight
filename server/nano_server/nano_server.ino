@@ -1,6 +1,6 @@
-#define VERSION  "0.0.3"
+#define VERSION  "0.0.4"
 //      Autor Alex Krieg
-//      Datum 13.07.2018
+//      Datum 20.07.2018
 
 
 #include <Wire.h> 
@@ -281,6 +281,7 @@ void displayUpdate()
     }
     case mode_info:
     {
+       writeSerial("tbox1|gvoltage");
        lcd_info();
        break; 
     }

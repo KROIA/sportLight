@@ -8,7 +8,7 @@ Version 0.2.0
 #include <MQTT.h>
 #define BOX_INDEX 1
 #define CLIENT_ID "client3"
-#define DEBUG
+//#define DEBUG
 
 // Update these with values suitable for your network.
 
@@ -53,7 +53,7 @@ void setup_wifi() {
     debug("");
     debug("Connecting to "+String(ssid));
     
-  
+    WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
   
     while (WiFi.status() != WL_CONNECTED) {
@@ -187,6 +187,7 @@ void mqttSend(String topic , String message)
   bool state = myMqtt.publish(topic,message);
   debug("return: "+String(state));
 }
+
 void serialRead()
 {
   if(Serial.available() != 0)

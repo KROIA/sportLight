@@ -1,7 +1,7 @@
 /*
 Autor Alex Krieg
-Datum 29.06.2018
-Version 0.2.5
+Datum 20.07.2018
+Version 0.2.5a
 */
 
 #include <Adafruit_NeoPixel.h>
@@ -76,8 +76,8 @@ byte mode_akku_numLedOn = 1;
 
 const float accelerationTrigger = 3.0;
 float gesAcceleration = 0;
-float maxAkkuVoltage = 9.00;
-float akkuVoltage = 9.00;
+float maxAkkuVoltage = 8.4;
+float akkuVoltage = maxAkkuVoltage;
 float minAkkuVoltage = 7.0; // 7.0V
 float shutDownAkkuVoltage = 6.0;
 bool shutDownAkku = false;
