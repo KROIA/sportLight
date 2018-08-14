@@ -5,25 +5,27 @@ writing to server:
 	voltageLow|7.0									// voltageLow|volts
 	voltageDOut|6.0									// voltageDOut|volts
 	brightness|100									// brightness|br
-	reactionTime|1.5								// reactionTime|timeSec
-	trigger|1										// trigger|1
+//	reactionTime|1.5								// reactionTime|timeSec
+	trigger|1|5										// trigger|1|timeSec
+	mode|2											// none=0 reflex=1 akku=2
+	
 }
 
 reading from server:
 {
-	set|+
-		color|100|100|100|							// set|color|red|green|blue|
-		brightness|100								// set|brightness|br
-		reactionTime|1								// set|reactionTime|1
-		trigger|1									// set|trigger|1
+	s+
+		color|100|100|100|							// scolor|red|green|blue|
+		brightness|100								// sbrightness|br
+//		reactionTime|1								// sreactionTime|1
+//		trigger|1									// strigger|1
 		
-	get|+
+	g+
 		color
 		brightness
 		voltage
-		
+		mode
 	mode|+
-		voltage|5									// mode|voltage|timeSec
+		1											// mode|1		none=0 reflex=1 akku=2
 }
 
 endByte: `]`

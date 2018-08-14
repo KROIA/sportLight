@@ -164,10 +164,11 @@ void mqttSplit(String topic , String message)
     
   }else if(topic == topic_tbox)
   {
-    if(message.indexOf("gvoltage") != -1)
+    /*if(message.indexOf("gvoltage") != -1)
     {
       serialSend("get|voltage");
-    }
+    }*/
+    serialSend(message);
   }else
   {
     mqttError(topic+" :\""+message+"\" -> unknown topic");
@@ -194,7 +195,8 @@ void serialRead()
   {
     String data = Serial.readStringUntil(']');
     if(data.indexOf("D: ") == 0){return;}
-    serialSplit(data);
+    //serialSplit(data);
+    mqttSend(topic_fbox,data);
   }
 }
 void serialSend(String data)
@@ -203,7 +205,7 @@ void serialSend(String data)
 }
 void serialSplit(String data)
 {
-  if(data.indexOf("voltage") == 0)
+ /* if(data.indexOf("voltage") == 0)
   {
     if(data.indexOf("voltageLow") == 0)
     {
@@ -215,5 +217,5 @@ void serialSplit(String data)
     {
       mqttSend(topic_fbox,data);
     }
-  }
+  }*/
 }
