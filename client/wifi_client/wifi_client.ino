@@ -1,7 +1,7 @@
 /*
 Autor Alex Krieg
-Datum 13.07.2018
-Version 0.2.0
+Datum 14.08.2018
+Version 0.2.1
 */
 
 #include <ESP8266WiFi.h>
@@ -10,7 +10,6 @@ Version 0.2.0
 #define CLIENT_ID "client3"
 //#define DEBUG
 
-// Update these with values suitable for your network.
 
 const char* ssid = "bedienbox";
 const char* password = "passwort";
@@ -124,8 +123,8 @@ void setup() {
   debug("subscribe to topic...");
   debug("topic \""+topic_tbox+"\"");
   myMqtt.subscribe(topic_tbox);
-  //debug("topic \""+topic_fmaster+"\"");
-  //myMqtt.subscribe(topic_fmaster);
+  debug("topic \""+topic_fmaster+"\"");
+  myMqtt.subscribe(topic_fmaster);
   //reconnect();
   debug("setup done");
 }
@@ -161,7 +160,7 @@ void mqttSplit(String topic , String message)
 {
   if(topic == topic_fmaster)
   {
-    
+    serialSend(message);
   }else if(topic == topic_tbox)
   {
     /*if(message.indexOf("gvoltage") != -1)

@@ -1,7 +1,7 @@
 /*
 Autor Alex Krieg
-Datum 21.07.2018
-Version 0.2.6
+Datum 14.08.2018
+Version 0.2.7
 */
 
 #include <Adafruit_NeoPixel.h>
@@ -207,7 +207,15 @@ void readSerial()
       {
         inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
         pixels_brightness = atoi(inputBuffer.substring(0,inputBuffer.indexOf("|")).c_str());
-      }/*else if(inputBuffer.indexOf("reactionTime") == 0)
+      }else if(inputBuffer.indexOf("mode") == 0)
+      {
+        inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
+        MODE(atoi(inputBuffer.c_str()));
+      }
+      
+      
+      
+      /*else if(inputBuffer.indexOf("reactionTime") == 0)
       {
         inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
         if(inputBuffer.indexOf("1") == 0){  mode_reflex_returnReactionTime = true;}else

@@ -1,7 +1,7 @@
 /*
 Autor Alex Krieg
-Datum 13.07.2018
-Version 0.2.0
+Datum 14.08.2018
+Version 0.2.1
 */
 
 #include <ESP8266WiFi.h>
@@ -17,18 +17,8 @@ struct color
   byte blue;
 };
 
-/*
- * Your WiFi config here
- *
-  */
-
 char ssid[] = "bedienbox";  	// your network SSID (name)
-char pass[] = "passwort";	// your network password
-
-/*
-char ssid[] = "Alexs iPhone";    // your network SSID (name)
-char pass[] = "abc12345"; // your network password
-*/
+char pass[] = "passwort";	    // your network password
 
 unsigned int mqttPort = 1883;       // the standard MQTT broker port
 unsigned int max_subscriptions = 30;
@@ -217,9 +207,10 @@ void serialSplit(String data)
   if(data.indexOf("tbox") == 0)
   {
     String topic = data.substring(0,data.indexOf("|"));
-    data = data.substring(data.indexOf("|")+1);
-    String message = data;
-    mqttSend(topic,message);
+    mqttSend(topic,data.substring(data.indexOf("|")+1));
+  }else if(data.indexOf("fmaster") == 0)
+  {
+    mqttSend("fmaster",data.substring(data.indexOf("|")+1));
   }
 }
 
