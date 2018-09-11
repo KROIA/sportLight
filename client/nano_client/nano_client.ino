@@ -1,8 +1,6 @@
-/*
-Autor Alex Krieg
-Datum 14.08.2018
-Version 0.2.7
-*/
+// Autor Alex Krieg
+// Datum 11.09.2018
+#define VERSION "0.3.0"
 
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
@@ -22,7 +20,25 @@ Version 0.2.7
 #define PIXELPIN 2
 #define AKKUPIN A1
 
-//#define DEBUG
+//-------------------------COMMUNICATION------------------
+const char GET       = 'g';
+const char SET       = 's';
+const char SEPARATOR = '|';
+
+const String VOLTAGE = "v";
+const String COLOR   = "c";
+const String ACTIVE  = "a";
+const String INACTIVE= "ia";
+const String IR      = "i";
+const String ACC     = "ac";
+const String TRIGGER = "t";
+const String _MODE   = "m";
+const String ON      = "on";
+const String OFF     = "of";
+const String BRIGHTNESS="b";
+
+
+//--------------------------------------------------------
 
 struct accel
 {
@@ -64,24 +80,21 @@ Timer pixelsUpdateTimer;
 Timer mode_reflex_Timer;
 unsigned int mode_reflex_time = 0;
 bool mode_reflex_returnReactionTime = false;
-bool mode_reflex_returnTrigger      = false;
+
 
 //---------
-bool mode_akkuLow_dimUp = true;
+byte mode_akku_numLedOn     = 1;
 Timer mode_akkuTimer;
-//Timer displayAkkuTimer;
-byte mode_akkuLow_colorRed = 0;
-byte mode_akku_numLedOn = 1;
 //------------------------------
 
-const float accelerationTrigger = 3.0;
-float gesAcceleration = 0;
-float maxAkkuVoltage = 8.4;
-float akkuVoltage = maxAkkuVoltage;
-float minAkkuVoltage = 7.0; // 7.0V
-float shutDownAkkuVoltage = 6.0;
-bool shutDownAkku = false;
-bool downAkku = false;
+float accelerationTrigger             = 3.0;
+float gesAcceleration                 = 0;
+const float maxAkkuVoltage            = 8.4;
+const float minAkkuVoltage            = 7.0; // 7.0V
+const float shutDownAkkuVoltage       = 6.0;
+float akkuVoltage                     = maxAkkuVoltage;
+bool shutDownAkku                     = false;
+bool downAkku                         = false;
 Timer checkAkkuTimer;
 
 int loadingPos = 1;
@@ -92,6 +105,7 @@ byte  pixels_brightness = 128;
 bool  pixels_enable = false;
 modus mode = modus_none;
 modus lastMode = modus_none;
+bool active = true;
 
 float tmpAX = 0;
 float tmpAY = 0;
@@ -106,8 +120,6 @@ void triggerFunction(byte source = 0);
 void updateRGB();
 void IR_highTriggerFunction();
 void handleMode();
-
-//void displayAkkuTimerFunction();
 
 void MODE(modus m);
 modus MODE();
@@ -135,15 +147,10 @@ void setup()
   pixelsUpdateTimer.onFinished(updateRGB);
   pixelsUpdateTimer.autoRestart(true);
   pixelsUpdateTimer.start(20);
-/*  wifiServerUpdateTimer.onFinished(wifiUpdate);
-  wifiServerUpdateTimer.autoRestart(true);
-  wifiServerUpdateTimer.start(3000);
-*/
+  
   checkAkkuTimer.onFinished(checkAkku);
   checkAkkuTimer.autoRestart(true);
   checkAkkuTimer.start(50);
-
-  //displayAkkuTimer.onFinished(displayAkkuTimerFunction);
   
   ir_sensor.onHighTrigger(IR_highTriggerFunction);
 
@@ -157,29 +164,16 @@ void loop()
 {
   pixelsUpdateTimer.update();
   sensor_UpdateIntervalTimer.update();
-  //wifiServerUpdateTimer.update();
   checkAkkuTimer.update();
-  //displayAkkuTimer.update();
   
   handleMode();
   readSerial();
 }
-/*void wifiUpdate()
-{
-  if(mode_reflex_Timer.isRunning())
-  {  
-    return;
-  }
-  //writeSerial("color");
-  //-------------einzeltest
-  //pixels_color.red = random(0,100);
-  //pixels_color.green = random(0,100);
-  //pixels_color.blue = random(0,100);
-  //MODE(modus_reflex);
-  //----------------------
-  
-}*/
 
+void serialBufferSepare(String &buffer)
+{
+  buffer = buffer.substring(buffer.indexOf(SEPARATOR)+1);
+}
 void readSerial()
 {
   if(Serial.available())
@@ -189,77 +183,63 @@ void readSerial()
       Serial.print("serialRead: ");
       Serial.println(inputBuffer);
     #endif
-    if(inputBuffer.indexOf("D: ") != -1){return;}
 //-----------------------------------------------SET-----------------------------------------
-    if(inputBuffer.indexOf("s") == 0)
+    if(inputBuffer.indexOf(SET) == 0)
     {
       inputBuffer = inputBuffer.substring(1);
-      if(inputBuffer.indexOf("color") == 0)  // color|100|100|100|
+      if(inputBuffer.indexOf(COLOR) == 0)  // color|100|100|100|
       {
-        inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
-        pixels_color.red = atoi(inputBuffer.substring(0,inputBuffer.indexOf("|")).c_str());
-        inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
-        pixels_color.green = atoi(inputBuffer.substring(0,inputBuffer.indexOf("|")).c_str());
-        inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
-        pixels_color.blue = atoi(inputBuffer.substring(0,inputBuffer.indexOf("|")).c_str());
-        //MODE(modus_reflex);
-      }else if(inputBuffer.indexOf("brightness") == 0)
+        serialBufferSepare(inputBuffer);
+        pixels_color.red = atoi(inputBuffer.substring(0,inputBuffer.indexOf(SEPARATOR)).c_str());
+        serialBufferSepare(inputBuffer);
+        pixels_color.green = atoi(inputBuffer.substring(0,inputBuffer.indexOf(SEPARATOR)).c_str());
+        serialBufferSepare(inputBuffer);
+        pixels_color.blue = atoi(inputBuffer.substring(0,inputBuffer.indexOf(SEPARATOR)).c_str());
+      }else if(inputBuffer.indexOf(ACTIVE) == 0)
       {
-        inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
-        pixels_brightness = atoi(inputBuffer.substring(0,inputBuffer.indexOf("|")).c_str());
-      }else if(inputBuffer.indexOf("mode") == 0)
+        active = true;
+      }else if(inputBuffer.indexOf(INACTIVE) == 0)
       {
-        inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
+        active = false;
+      }else if(inputBuffer.indexOf(BRIGHTNESS) == 0)
+      {
+        serialBufferSepare(inputBuffer);
+        pixels_brightness = atoi(inputBuffer.c_str());
+      }else if(inputBuffer.indexOf(_MODE) == 0)
+      {
+        serialBufferSepare(inputBuffer);
         MODE(atoi(inputBuffer.c_str()));
-      }
-      
-      
-      
-      /*else if(inputBuffer.indexOf("reactionTime") == 0)
-      {
-        inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
-        if(inputBuffer.indexOf("1") == 0){  mode_reflex_returnReactionTime = true;}else
-                                         {  mode_reflex_returnReactionTime = false;}
-      }else  if(inputBuffer.indexOf("trigger") == 0)
-      {
-        inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
-        if(inputBuffer.indexOf("1") == 0){  mode_reflex_returnTrigger = true;}else
-                                         {  mode_reflex_returnTrigger = false;}
-      }*/
-      
+      }      
     } else 
 //-----------------------------------------------GET-----------------------------------------
-    if(inputBuffer.indexOf("g") == 0)
+    if(inputBuffer.indexOf(GET) == 0)
     {
       inputBuffer = inputBuffer.substring(1);
-      if(inputBuffer.indexOf("color") == 0)  // color|100|100|100|
+      if(inputBuffer.indexOf(VOLTAGE) == 0)
       {
-        writeSerial("color|"+String(pixels_color.red)+"|"+String(pixels_color.green)+"|"+String(pixels_color.blue));
-      }else if(inputBuffer.indexOf("brightness") == 0)
+        writeSerial(VOLTAGE+SEPARATOR+String(akkuVoltage));
+      }else if(inputBuffer.indexOf(COLOR) == 0)  // color|100|100|100|
       {
-        writeSerial("brightness|"+String(pixels_brightness));
-      }else if(inputBuffer.indexOf("voltage") == 0)
+        writeSerial(COLOR+SEPARATOR+String(pixels_color.red)+SEPARATOR+String(pixels_color.green)+SEPARATOR+String(pixels_color.blue));
+      }else if(inputBuffer.indexOf(ACTIVE) == 0)
       {
-        writeSerial("voltage|"+String(akkuVoltage));
-      }else if(inputBuffer.indexOf("mode") == 0)
+        if(active)
+          writeSerial(ACTIVE);
+        else
+          writeSerial(INACTIVE);
+      }else if(inputBuffer.indexOf(IR) == 0)
       {
-        writeSerial("mode|"+String(MODE()));
+        writeSerial(IR+SEPARATOR+String(ir_sensor.value()));
+      }else if(inputBuffer.indexOf(ACC) == 0)
+      {
+        writeSerial(ACC+SEPARATOR+String(gesAcceleration));
+      }else if(inputBuffer.indexOf(_MODE) == 0)
+      {
+        writeSerial(_MODE+SEPARATOR+String(MODE()));
+      }else if(inputBuffer.indexOf(BRIGHTNESS) == 0)
+      {
+        writeSerial(BRIGHTNESS+SEPARATOR+String(pixels_brightness));
       }
-    }
-    if(inputBuffer.indexOf("mode") == 0)  //data|
-    {
-      inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
-    /*  if(inputBuffer.indexOf("voltage") == 0)  
-      {
-        if(MODE() != modus_akku && RGB_MODE() != RGB_akku)
-        {
-          //inputBuffer = inputBuffer.substring(inputBuffer.indexOf("|")+1);
-          //displayAkkuTimer.start(atoi(inputBuffer.c_str())*1000);
-          MODE(modus_akku);
-          RGB_MODE(RGB_akku);
-        }
-      }*/
-      MODE(atoi(inputBuffer.c_str()));
     }
   }
 }
@@ -272,15 +252,6 @@ void sensorUpdateFunction()
   ir_sensor.update();
   getAcceleration(accelgyro,tmpAX,tmpAY,tmpAZ);
   gesAcceleration = sqrt(tmpAX*tmpAX+tmpAY*tmpAY+tmpAZ*tmpAZ)-9.804;
-  /* 
-  Serial.print(tmpAX);
-  Serial.print("\t");
-  Serial.print(tmpAY);
-  Serial.print("\t");
-  Serial.print(tmpAZ);
-  Serial.print("\t");
-  Serial.println(gesAcceleration);
-  */
    if(gesAcceleration > accelerationTrigger)
    {
       switch(MODE())
@@ -317,15 +288,11 @@ void triggerFunction(byte source)
       mode_reflex_time = mode_reflex_Timer.runtime();
       if(mode_reflex_returnReactionTime)
       {
-        writeSerial("reactionTime|"+String((float)mode_reflex_time/1000));
-      }
-      if(mode_reflex_returnTrigger)
-      {
+        writeSerial(TRIGGER+SEPARATOR+String(source)+SEPARATOR+String((float)mode_reflex_time/1000));
         //source ==:
         //  0 -> none
         //  1 -> IR_Sensor
         //  2 -> Accelometer
-        writeSerial("trigger|"+String(source)+"|"+String((float)mode_reflex_time/1000));
       }
       mode_reflex_Timer.stop();
       pixels_enable = false;
@@ -577,12 +544,12 @@ void checkAkku()
     {
       pixelsUpdateTimer.autoRestart(false);
       pixelsUpdateTimer.stop();
-      updateRGB();
       pixels_brightness = 0;
       pixels_enable = false;
+      updateRGB();
       if(!shutDownAkku)
       {
-        writeSerial("voltageDOut|"+String(akkuVoltage));
+        writeSerial(OFF);
         shutDownAkku = true;
       }
     }
@@ -590,16 +557,11 @@ void checkAkku()
     {
       if(!downAkku)
       {
-        writeSerial("voltageLow|"+String(akkuVoltage));
         downAkku = true;
       }
       if(shutDownAkku)
       {
-        shutDownAkku = false;
-        pixels_enable = true;
-        MODE(LASTMODE());
-        pixelsUpdateTimer.autoRestart(true);
-        pixelsUpdateTimer.start(20);
+        
       }
     }
   }
@@ -607,12 +569,13 @@ void checkAkku()
   {
     if(downAkku)
     downAkku = false;
+    
+    writeSerial(ON);
+    shutDownAkku = false;
+    pixels_enable = true;
+    MODE(LASTMODE());
+    pixelsUpdateTimer.autoRestart(true);
+    pixelsUpdateTimer.start(20);
   }
 }
-
-/*void displayAkkuTimerFunction()
-{
-  MODE(LASTMODE());
-  RGB_MODE(LAST_RGB_MODE());
-}*/
 
